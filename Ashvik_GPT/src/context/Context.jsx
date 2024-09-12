@@ -14,6 +14,7 @@ const ContextProvider = (props) => {
     const [loading, setLoading] = useState(false); 
     const [resultData, setResultData] = useState(""); 
     const [uploadedImage, setUploadedImage] = useState(null);
+    const [recentSearches, setRecentSearches] = useState([]);
 
     const delayPara = (index, nextWord) => {
         setTimeout(() => {
@@ -25,20 +26,22 @@ const ContextProvider = (props) => {
         setShowResult(false);
     }
 
-    const onSent = async (prompt) => {
+    const onSent = async (prompt, imageData) => {
         try {
             setResultData("");
             setLoading(true);
             setShowResult(true);
-            let response;
-            if (prompt !== undefined) {
-                response = await run(prompt);
-                setRecentPrompt(prompt)
-            }else{
-                setPrevPrompts(prev => [...prev, input]);
-                setRecentPrompt(input);
-                response = await run(input);
-            }
+            
+            console.log("onSent called with prompt:", prompt);
+            console.log("Image data present:", !!imageData);
+
+            const response = await run(prompt || input, imageData);
+            
+            console.log("Response received in onSent:", response);
+
+            setRecentPrompt(prompt || input);
+            setRecentSearches(prev => [(prompt || input), ...prev.slice(0, 4)]);
+            
             let responseArray = response.split("**");
             let newResponse = "";
 
@@ -57,8 +60,8 @@ const ContextProvider = (props) => {
                 delayPara(i, nextWord + " ");
             }
         } catch (error) {
-            console.error("Error fetching data:", error);
-            setResultData("An error occurred. Please try again.");
+            console.error("Error in onSent:", error);
+            setResultData("An error occurred. Please try again later or contact support if the issue persists.");
         } finally {
             setLoading(false);
             setInput("");
@@ -76,8 +79,10 @@ const ContextProvider = (props) => {
         resultData,
         input,
         setInput,
-        newChat
-    }), [prevPrompts, recentPrompt, showResult, loading, resultData, input]);
+        newChat,
+        recentSearches,
+        setRecentSearches
+    }), [prevPrompts, recentPrompt, showResult, loading, resultData, input, recentSearches]);
 
     return (
         <Context.Provider value={ContextValue}>

@@ -1,12 +1,13 @@
 import './Main.css';
 import {assets} from '../../assets/assets/assets';
-import { useContext, useState, useRef } from 'react';
+import { useContext, useState, useRef, useEffect } from 'react';
 import { Context } from '../../context/Context';
 
 const Main = () => {
     const {onSent, recentPrompt, showResult, loading, resultData, setInput, input} = useContext(Context);
     const [isListening, setIsListening] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [clearImage, setClearImage] = useState(false);
     const fileInputRef = useRef(null);
 
     const startSpeechRecognition = () => {
@@ -29,8 +30,8 @@ const Main = () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setSelectedImage(e.target.result);
-                setInput("Explain this image");
+                setSelectedImage(e.target.result.split(',')[1]);
+                setInput("Describe this image");
             };
             reader.readAsDataURL(file);
         }
@@ -38,7 +39,15 @@ const Main = () => {
 
     const handleSend = () => {
         onSent(input, selectedImage);
+        setClearImage(true);
     };
+
+    useEffect(() => {
+        if (clearImage && !loading) {
+            setSelectedImage(null);
+            setClearImage(false);
+        }
+    }, [loading, clearImage]);
 
   return (
     <div className='main'>
@@ -84,9 +93,9 @@ const Main = () => {
                     <hr />
                 </div>
                 : <div>
-                    {selectedImage && (
+                    {selectedImage && !clearImage && (
                         <img 
-                            src={selectedImage} 
+                            src={`data:image/jpeg;base64,${selectedImage}`} 
                             alt="Uploaded" 
                             style={{ maxWidth: '100%', maxHeight: '300px', marginBottom: '20px' }} 
                         />
@@ -113,9 +122,9 @@ const Main = () => {
                         alt="" 
                         onClick={() => fileInputRef.current.click()}
                     />
-                    {selectedImage && (
+                    {selectedImage && !clearImage && (
                         <img 
-                            src={selectedImage} 
+                            src={`data:image/jpeg;base64,${selectedImage}`} 
                             alt="Uploaded" 
                             style={{ maxWidth: '30px', maxHeight: '30px', marginLeft: '5px' }} 
                         />
