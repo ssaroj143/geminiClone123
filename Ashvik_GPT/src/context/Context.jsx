@@ -42,26 +42,12 @@ const ContextProvider = (props) => {
             setRecentPrompt(prompt || input);
             setRecentSearches(prev => [(prompt || input), ...prev.slice(0, 4)]);
             
-            let responseArray = response.split("**");
-            let newResponse = "";
+            // ... existing response processing ...
+            setResultData(response);
 
-            for (let i = 0; i < responseArray.length; i++) {
-                if (i === 0 || i % 2 !== 1) {
-                    newResponse += responseArray[i];
-                } else {
-                    newResponse += "<b>" + responseArray[i] + "</b>";
-                }
-            }
-
-            let newResponse2 = newResponse.split("*").join("<br/>");
-            let newResponseArray = newResponse2.split(" ");
-            for (let i = 0; i < newResponseArray.length; i++) {
-                const nextWord = newResponseArray[i];
-                delayPara(i, nextWord + " ");
-            }
         } catch (error) {
             console.error("Error in onSent:", error);
-            setResultData("An error occurred. Please try again later or contact support if the issue persists.");
+            setResultData("The AI service is currently unavailable. Please try again later.");
         } finally {
             setLoading(false);
             setInput("");

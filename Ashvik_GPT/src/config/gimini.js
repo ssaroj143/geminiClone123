@@ -4,7 +4,9 @@ import { API_KEY } from './config';
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-async function run(prompt, imageData, retries = 3) {
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function run(prompt, imageData, retries = 3, backoff = 1000) {
   try {
     console.log("Starting API request with prompt:", prompt);
     console.log("Image data present:", !!imageData);
@@ -34,11 +36,11 @@ async function run(prompt, imageData, retries = 3) {
   } catch (error) {
     console.error("Error in Gemini API:", error);
     if (retries > 0) {
-      console.log(`Retrying... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
-      return run(prompt, imageData, retries - 1);
+      console.log(`Retrying in ${backoff}ms... (${retries} attempts left)`);
+      await delay(backoff);
+      return run(prompt, imageData, retries - 1, backoff * 2);
     }
-    throw error;
+    throw new Error("Gemini API is currently unavailable. Please try again later.");
   }
 }
 
