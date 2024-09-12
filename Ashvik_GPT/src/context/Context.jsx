@@ -32,22 +32,36 @@ const ContextProvider = (props) => {
             setLoading(true);
             setShowResult(true);
             
-            console.log("onSent called with prompt:", prompt);
-            console.log("Image data present:", !!imageData);
-
-            const response = await run(prompt || input, imageData);
+            let response;
+            if (imageData) {
+                response = await run("Describe this image: " + prompt, imageData);
+            } else {
+                response = await run(prompt || input);
+            }
             
-            console.log("Response received in onSent:", response);
-
             setRecentPrompt(prompt || input);
             setRecentSearches(prev => [(prompt || input), ...prev.slice(0, 4)]);
             
-            // ... existing response processing ...
-            setResultData(response);
+            let responseArray = response.split("**");
+            let newResponse = "";
 
+            for (let i = 0; i < responseArray.length; i++) {
+                if (i === 0 || i % 2 !== 1) {
+                    newResponse += responseArray[i];
+                } else {
+                    newResponse += "<b>" + responseArray[i] + "</b>";
+                }
+            }
+
+            let newResponse2 = newResponse.split("*").join("<br/>");
+            let newResponseArray = newResponse2.split(" ");
+            for (let i = 0; i < newResponseArray.length; i++) {
+                const nextWord = newResponseArray[i];
+                delayPara(i, nextWord + " ");
+            }
         } catch (error) {
-            console.error("Error in onSent:", error);
-            setResultData("The AI service is currently unavailable. Please try again later.");
+            console.error("Error fetching data:", error);
+            setResultData("An error occurred. Please try again.");
         } finally {
             setLoading(false);
             setInput("");
